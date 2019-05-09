@@ -1,21 +1,22 @@
-def just_do_it():
-    
-    L_range = ([51,101,151,201,251])
-    T_values = []
-    
-    for L in L_range:
-        T_values.append(runover_main(L,1000,10,'A',True,False)) 
-
-    fig = plt.figure()
-    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
-    ax.plot(L_range,T_values,marker='o',ls=':')
-    ax.set_xlabel('Grid size (L)')
-    ax.set_ylabel('Run time (s)')
-
-    print(L_range)
-    print(T_values)
-    return
-
+# 
+#def just_do_it():
+#    
+#    L_range = ([51,101,151,201,251])
+#    T_values = []
+#    
+#    for L in L_range:
+#        T_values.append(runover_main(L,1000,10,'A',True,False)) 
+#
+#    fig = plt.figure()
+#    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+#    ax.plot(L_range,T_values,marker='o',ls=':')
+#    ax.set_xlabel('Grid size (L)')
+#    ax.set_ylabel('Run time (s)')
+#
+#    print(L_range)
+#    print(T_values)
+#    return
+#
 #runover_main(21,1000,10,'A',False,True)
 
 #def resume():
@@ -35,16 +36,69 @@ def just_do_it():
 #    return
 #resume()
 
-#def main_test():
-#    G_L = 31
-#    G_p = .6
-#    for i in range(10000):
-#        x = lattice(G_L,G_p)
-#        x.percolate()
-#    return
-#measure(main_test)
+### Um histograma para cada caso...
+#import pandas as pd
+#
+#run=[]
+#df=[]
+#for i in range(10):
+#    run.append(Get_Clusters(21,.5))
+#    df.append(pd.DataFrame(run[i]))
+#
+#df[4].hist()
+#
 
+## Número médio de clusters dada uma probabilidade
+def Clust_Avg(L,pf,samples) :
+    n_clust = 0
+    for i in range(samples) : 
+        n_clust += len(Get_Clusters(L,pf))
+    n_clust /= samples
+    return n_clust
 
+def Clust_see(L,prob_points,samples):
+    pf_range = np.linspace(0,1,prob_points)
+    n_clust = np.array([Clust_Avg(L,pf,samples) for pf in pf_range])
+    return pf_range, n_clust
+
+Px,Py = Clust_see(21,5,100)
+
+fig = plt.figure()
+ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+ax.plot(Px,Py,marker='o',ls=':')
+ax.set_xlabel('Free cell probability')
+ax.set_ylabel('Average number of clusters')
+
+#Get_Clusters(21,.5)
+def Get_Clusters(G_L,G_p):
+    ##inicialização
+    #G_L = 31
+    #G_p = .6
+    x = lattice(G_L,G_p)
+#    Fx = x.FREE_GRID
+    ##conjunto de clusters
+    Clust = []
+    Clust_conn = []
+    ##Primeiro Cluster
+    x.percolatefull()
+    Clust.append(x.GRID) # armazena cluster
+    Clust_conn.append(Clust[len(Clust_conn)].sum()) #numero de conexões do cluster
+    FlagCluster = x.hasCluster() # confere se ainda existe algum cluster a ser encontrado
+    
+    while FlagCluster:
+        x.restart(Clust[len(Clust_conn)-1])    
+        x.percolatefull()
+        Clust.append(x.GRID) # armazena cluster
+        Clust_conn.append(Clust[len(Clust_conn)].sum()) #numero de conexões do cluster
+        FlagCluster = x.hasCluster() # confere se ainda existe algum cluster a ser encontrado
+      
+#    ##Conferindo se obtivemos realmente todos os clusters
+#    All_Clust = Clust[0].copy()
+#    for i in range(1,len(Clust_conn)):
+#        All_Clust += Clust[i]
+#    0 in (Fx == All_Clust)
+
+    return Clust_conn
 
 ###############################################################################
 
@@ -99,6 +153,28 @@ class lattice:
         self.conv=False
         self.STEP=0
         return
+    def hasCluster(self):
+        return (1 in self.FREE_GRID ^ self.GRID)
+    def restart(self,CLUSTER):
+        """ Útil para obter vários clusters"""
+        if self.hasCluster():
+            self.FREE_GRID = self.FREE_GRID ^ CLUSTER
+    
+            # Melhorar isso... .nonzero() dá lista de TODOS! Quero somente o primeiro
+            coord = (np.array(self.FREE_GRID.nonzero()).T[0,0],
+                     np.array(self.FREE_GRID.nonzero()).T[0,1])
+            self.GRID = np.zeros((self.L+2,self.L+2),dtype=bool)    
+            self.GRID[coord]=True
+               
+            self.edgeU=False
+            self.edgeD=False
+            self.edgeL=False
+            self.edgeR=False
+            self.edge=False
+            self.conv=False
+            self.STEP=0
+        else : print("Não existem mais clusters!")
+        return        
     def toprint(self):
         return self.GRID[1:-1,1:-1]*1 + np.invert(self.FREE_GRID[1:-1,1:-1])*(-1)
     def nextstep(self):
@@ -134,6 +210,16 @@ class lattice:
             self.checkconvergence()
             if self.conv : break
             if self.edge : break
+            self.acept()
+            self.STEP +=1
+        return
+    def percolatefull(self):
+        """ Removido condição de parada ao chegar na borda """
+        MAX_STEPS = 1000
+        while (self.STEP < MAX_STEPS):
+            self.nextstep()
+            self.checkconvergence()
+            if self.conv : break
             self.acept()
             self.STEP +=1
         return
