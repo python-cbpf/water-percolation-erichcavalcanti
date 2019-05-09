@@ -1,65 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-@author: erichcavalcanti@gmail.com
-
-Temos alguns diferentes tipos de objetivos (kind)...
-    A - frequencia com que atinge no mínimo uma vez uma das bordas da rede
-    B - densidade de ocupação quando ocorre a condição acima
-    C - frequencia com que atinge um lado especifico da rede [up,down,left,right]
-    D - frequencia com que atinge um número especifico de lados da rede [1,2,3,4]
-    E - "dimensão fractal"
-
-Processo:
-    runover_main > average_main > chama classe > nextstep, check
-
-    Função nextstep responsável pela evolução da rede
-    Função check confere se evolução deve parar
-    A classe gera a rede inicial e evolui ela. Gera a figura da rede final.
-    Função average_main repete main um certo número de samples para tirar
-        média de alguma quantidade em Determinada frequencia fixa (ver objetivos)
-    Função runover_main pega average_main e varia a frequencia.
-
-----------------------------------------------------------------
-após compilar funções, rodar:
-    runover_main(L,samples,prob_points,kind,FlagFit,FlagPlot)
-exemplos:
-    runover_main(21,1000,10,'A',True,True)
-    runover_main(21,1000,10,'D',False,True)
-
-OU de modo explicito:
-    x.lattice(L,p) #gera rede original
-    x.percolate() #roda o código
-    plot(x.toprint()) #mostra figura
-    x.edgeB #diz se atingiu ao menos uma borda
-    x.edge #diz quandas bordas atingiu
-    x.density() #diz densidade
-    fractal_dimension(x.toprint(),.9) #mede (?) dimensão fractal (?) da figura
-
----------------------------------------------------------------------
-Mais implementações possíveis:
-[ ] Redes com conctividades diferentes
-[ ] Finite-size scaling. Observar cruzamento das curvas
-[ ] Adicionar incertezas
-[ ] Desenhar rede fractal
-[ ] Implementar pandas para lidar com todos os possíveis outputs de lattice?
-
-
-https://journals.aps.org/prl/pdf/10.1103/PhysRevLett.51.2347
-https://pdfs.semanticscholar.org/707e/2fe48cd821117c5e142d070a164b0b8f6156.pdf
-https://arxiv.org/pdf/1504.02898.pdf
-
-------------------------------------------------------------------------
-Order Parameter : free site probability
-Susceptibility : average cluster size
-    cluster number density n_l(p): number of cluster containing l sites
-    probability for a site to belong any finite cluster
-        P = \sum_l l n_l(p) (excluding infinite clusters)
-        ***
-
-
-"""
-
 def just_do_it():
     
     L_range = ([51,101,151,201,251])
@@ -78,12 +16,8 @@ def just_do_it():
     print(T_values)
     return
 
-#
-#runover_main(21,1000,10,'B',False,True) 
-#    # testando outro modo.. dividindo pelos estados livres
 #runover_main(21,1000,10,'A',False,True)
 
-#resume()
 #def resume():
 #    prob_points=100
 #    samples=1000
@@ -99,27 +33,17 @@ def just_do_it():
 #        ax.plot(pf_range,perc[i],label=str(L_range[i]))
 #    ax.legend(loc='upper left',fontsize='small')
 #    return
+#resume()
 
-#measure(main_test)
 #def main_test():
 #    G_L = 31
 #    G_p = .6
 #    for i in range(10000):
 #        x = lattice(G_L,G_p)
 #        x.percolate()
-##        plot(x.toprint())
 #    return
-#
-#def main():
-#    G_L = 31
-#    G_p = .6
-#    x = lattice(G_L,G_p)
-#    x.percolate()
-#    plot(x.toprint())
-#    fractal_dimension(x.toprint(),.9)
-#    fractal_dimension(x.GRID,.9)
-#    fractal_dimension(x.FREE_GRID,.9)
-#    return
+#measure(main_test)
+
 
 
 ###############################################################################
@@ -131,7 +55,7 @@ from pylab import matplotlib as mpl
 from scipy.optimize import curve_fit
 mpl.rcParams.update({'font.size': 18, 'font.family': 'serif'})
 
-
+### -------------- Class : lattice ---------------
 class lattice:
     """
     REQUIRES : 
@@ -143,12 +67,7 @@ class lattice:
     MIDDLE OUTPUT
         FREE_GRID : path to follow
     OUTPUT
-        GRID / NEW_GRID
-        edge / edgeB, edgeU, edgeD, edgeL, edgeR
-        conv
-        STEP
-        density()
-        ? fractaldimension : outside function that uses self.toplot()
+        GRID / NEW_GRID; edge / edgeB, edgeU, edgeD, edgeL, edgeR; conv; STEP; density(); ? fractaldimension : outside function that uses self.toplot()
     DESCRIPTION
         * We use a GRID with size (L+2)^2. The border of the GRID is neglected.
             Input and Output does not seem the "extra" size
@@ -156,7 +75,6 @@ class lattice:
             It is assumed that the border is fully free. 
             at some moment we can explore some boundary condition
         * To simplify we use odd L, so that the grid center is well defined
-        
     """   
     def __init__(self,L0,pf):
         if (L0%2) : self.L = L0
@@ -230,6 +148,7 @@ class lattice:
     def density2(self):
         return self.GRID.sum() / self.FREE_GRID.sum()
 
+### -------------- Function to measure time. Useful for optimization ---------------
 import cProfile
 def measure(__func__):
     """ medir tempo de execução dos processos internos de uma função """
@@ -241,13 +160,15 @@ def measure(__func__):
         pr.print_stats()
     return
 
+### -------------- Just plot ---------------
 def plot(toprint):
     plt.figure()
     plt.imshow(toprint,vmin=-1,vmax=1,cmap='coolwarm')
     plt.axis('off')
     return
 
-##############################################################################
+################# MODIFICAR : tornar funções mais limpas #################
+### -------------- Function : average of some property ---------------
 def average_main(L,pf,samples,kind):
     """A diferença do kind é na escolha do Return na função main()
         Isso significa, aqui, a escolha do que estamos tomando a média no número
@@ -268,21 +189,7 @@ def average_main(L,pf,samples,kind):
     
     return average
 
-#
-#SAVE_DICT = {
-#        "A" : { "strings" : ['Percolation','Frequency'] },
-#        "B" : { "strings" : ['Density','Mean Density'] },
-#        "C" : { "strings" : ['PercWhich','Frequency'],
-#               "labels" : ['up','down','left','right'] },
-#        "D" : { "strings" : ['PercMany','Frequency'],
-#               "labels" : ['1 wall','2 walls','3 walls','4 walls'] },
-#        "E" : { "strings" : ['FractalDim','Fractal Dimension']}
-#        }
-
-#k = "C"
-#if ("labels" in SAVE_DICT[k]) :
-#    for value in SAVE_DICT[k]["labels"]:
-#        print(value)
+### -------------- Function : salva dados, faz plot, faz fit ---------------
 
 def runover_main(L,samples,prob_points,kind,FlagFit,FlagPlot):
     """ average_main ao longo de um intervalo de valores de probabilidade
@@ -307,13 +214,6 @@ def runover_main(L,samples,prob_points,kind,FlagFit,FlagPlot):
             return "ERROR"
 
     Tini = time.time()
-
-###TO REMOVE!!
-#    prob_points=10
-#    samples=100
-#    L=21
-#    kind='A'
-###TO REMOVE!!
     
     pf_range = np.linspace(0,1,prob_points)
     frequency = np.array([average_main(L,pf,samples,kind) for pf in pf_range])
@@ -327,13 +227,7 @@ def runover_main(L,samples,prob_points,kind,FlagFit,FlagPlot):
     data_header += "Free Path Probability (P_F), "+thestrings[1]+"\n"
     data_points = np.column_stack((pf_range, frequency))
     np.savetxt(str(method)+thestrings[0]+str(L)+'.dat', data_points,header=data_header)   
-#input
-#    frequency, pf_range
-#    thelabels
-#    Tend
-#    L
-#    thestrings
-#    method
+
     if(FlagPlot):
         fig = plt.figure()
         ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
@@ -363,9 +257,12 @@ def runover_main(L,samples,prob_points,kind,FlagFit,FlagPlot):
     
     return Tend
 
+### -------------- Function : necessário para o fit ---------------
 def sigmoid(x,a,b):
     return 1 / (1+ np.exp(-a*(x-b)))
-###############################################################################
+
+
+### -------------- Function : Proposta para medir dimensão fractal ---------------
 import scipy.misc
 def fractal_dimension(Z, threshold=0.9):
     #From https://gist.github.com/viveksck/1110dfca01e4ec2c608515f0d5a5b1d1
@@ -406,9 +303,27 @@ def fractal_dimension(Z, threshold=0.9):
     # Fit the successive log(sizes) with log (counts)
     coeffs = np.polyfit(np.log(sizes), np.log(counts), 1)
     return -coeffs[0]
+
 ###############################################################################
 
 #Tentativa de simplificar codigo...
+
+#
+#SAVE_DICT = {
+#        "A" : { "strings" : ['Percolation','Frequency'] },
+#        "B" : { "strings" : ['Density','Mean Density'] },
+#        "C" : { "strings" : ['PercWhich','Frequency'],
+#               "labels" : ['up','down','left','right'] },
+#        "D" : { "strings" : ['PercMany','Frequency'],
+#               "labels" : ['1 wall','2 walls','3 walls','4 walls'] },
+#        "E" : { "strings" : ['FractalDim','Fractal Dimension']}
+#        }
+
+#k = "C"
+#if ("labels" in SAVE_DICT[k]) :
+#    for value in SAVE_DICT[k]["labels"]:
+#        print(value)
+
 #IGNORAR TUDO ABAIXO...
 #def SAVE_DATA():
 #    data_header = "Grid Size: "+str(L)+"\n"
