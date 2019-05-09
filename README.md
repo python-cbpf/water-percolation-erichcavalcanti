@@ -4,14 +4,14 @@ water-percolation-erichcavalcanti created by GitHub Classroom
 @author: erichcavalcanti@gmail.com
 
 Temos alguns diferentes tipos de objetivos (kind)...
+
     A - frequencia com que atinge no mínimo uma vez uma das bordas da rede
     B - densidade de ocupação quando ocorre a condição acima
     C - frequencia com que atinge um lado especifico da rede [up,down,left,right]
     D - frequencia com que atinge um número especifico de lados da rede [1,2,3,4]
     E - "dimensão fractal"
 
-Processo:
-    runover_main > average_main > chama classe > nextstep, check
+Processo: runover_main > average_main > chama classe > nextstep, check
 
     Função nextstep responsável pela evolução da rede
     Função check confere se evolução deve parar
@@ -22,12 +22,15 @@ Processo:
     
     ----------------------------------------------------------------
 após compilar funções, rodar:
+
     runover_main(L,samples,prob_points,kind,FlagFit,FlagPlot)
 exemplos:
+
     runover_main(21,1000,10,'A',True,True)
     runover_main(21,1000,10,'D',False,True)
 
 OU de modo explicito:
+
     x.lattice(L,p) #gera rede original
     x.percolate() #roda o código
     plot(x.toprint()) #mostra figura
@@ -51,3 +54,4 @@ Mais implementações possíveis:
 https://journals.aps.org/prl/pdf/10.1103/PhysRevLett.51.2347
 https://pdfs.semanticscholar.org/707e/2fe48cd821117c5e142d070a164b0b8f6156.pdf
 https://arxiv.org/pdf/1504.02898.pdf
+
