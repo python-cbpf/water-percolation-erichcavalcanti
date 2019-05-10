@@ -51,23 +51,29 @@
 ## Número médio de clusters dada uma probabilidade
 def Clust_Avg(L,pf,samples) :
     n_clust = 0
+    cnd = 0
     for i in range(samples) : 
-        n_clust += len(Get_Clusters(L,pf))
+        clust = Get_Clusters(L,pf)
+        n_clust += len(clust)
+        cnd_aux = 0
+        for l in range(11): cnd_aux += l*clust.count(l) #cluster number density
+        cnd +=cnd_aux
     n_clust /= samples
-    return n_clust
+    cnd /= samples
+    return n_clust,cnd
 
 def Clust_see(L,prob_points,samples):
     pf_range = np.linspace(0,1,prob_points)
-    n_clust = np.array([Clust_Avg(L,pf,samples) for pf in pf_range])
-    return pf_range, n_clust
+    l_nl = np.array([Clust_Avg(L,pf,samples) for pf in pf_range])
+    return pf_range, l_nl
 
-Px,Py = Clust_see(21,5,100)
-
+Px,Py = Clust_see(21,100,1000)
 fig = plt.figure()
 ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
-ax.plot(Px,Py,marker='o',ls=':')
+ax.plot(Px,Py.T[1],marker='o',ls=':')
 ax.set_xlabel('Free cell probability')
 ax.set_ylabel('Average number of clusters')
+print(Py)
 
 #Get_Clusters(21,.5)
 def Get_Clusters(G_L,G_p):
