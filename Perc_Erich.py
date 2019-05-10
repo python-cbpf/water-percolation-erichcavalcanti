@@ -1,22 +1,22 @@
-# 
-#def just_do_it():
-#    
-#    L_range = ([51,101,151,201,251])
-#    T_values = []
-#    
-#    for L in L_range:
-#        T_values.append(runover_main(L,1000,10,'A',True,False)) 
-#
-#    fig = plt.figure()
-#    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
-#    ax.plot(L_range,T_values,marker='o',ls=':')
-#    ax.set_xlabel('Grid size (L)')
-#    ax.set_ylabel('Run time (s)')
-#
-#    print(L_range)
-#    print(T_values)
-#    return
-#
+ def just_do_it():
+    
+    L_range = ([51,101,151,201,251])
+#    L_range = ([301,401,501,601,701])
+    T_values = []
+    
+    for L in L_range:
+        T_values.append(runover_main(L,1000,10,'A',True,False)) 
+
+    fig = plt.figure()
+    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+    ax.plot(L_range,T_values,marker='o',ls=':')
+    ax.set_xlabel('Grid size (L)')
+    ax.set_ylabel('Run time (s)')
+
+    print(L_range)
+    print(T_values)
+    return
+
 #runover_main(21,1000,10,'A',False,True)
 
 #def resume():
