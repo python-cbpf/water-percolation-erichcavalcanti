@@ -75,11 +75,10 @@ ax.set_xlabel('Free cell probability')
 ax.set_ylabel('Average number of clusters')
 print(Py)
 
-#Get_Clusters(21,.5)
 def Get_Clusters(G_L,G_p):
     ##inicialização
-    #G_L = 31
-    #G_p = .6
+#    G_L = 31
+#    G_p = .6
     x = lattice(G_L,G_p)
 #    Fx = x.FREE_GRID
     ##conjunto de clusters
@@ -348,7 +347,7 @@ def runover_main(L,samples,prob_points,kind,FlagFit,FlagPlot):
         fig.savefig(str(method)+'Fit'+thestrings[0]+str(L)+'.png')
     
     return Tend
-
+   
 ### -------------- Function : necessário para o fit ---------------
 def sigmoid(x,a,b):
     return 1 / (1+ np.exp(-a*(x-b)))
