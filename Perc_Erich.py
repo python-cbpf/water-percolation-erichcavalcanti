@@ -1,6 +1,115 @@
+def test(ord):
+    """ Só plota"""
+    Px,Py = Clust_see(21,10,100,True)
+    fig = plt.figure()
+    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+    ax.plot(Px,Py[ord],marker='o',ls=':')
+    ax.set_xlabel('Free cell probability')
+#    ax.set_ylabel('Average number of clusters')
+#    print(Py)
+    return
+
+def Clust_see(L,prob_points,samples,tocut):
+    """ Faz Clust_Avg para um conjunto de probabilidades pf. 
+    Organiza dados para facilitar plot"""
+    pf_range = np.linspace(0,1,prob_points)
+    l_nl = np.array([Clust_Avg(L,pf,samples,tocut) for pf in pf_range])
+    return pf_range, l_nl.T
+
+from collections import Counter
+def Clust_Avg(L,pf,samples,tocut) :
+    """ Após obter NS,SNS e S2NS, tira a média para certo conjunto de samples    
+    lista de todos os clusters (com seus tamanhos)
+        CLUST = Get_Clusters(L,pf)
+        CLUST[0]
+    lista de todos os clusters que não tocam a borda (e seus tamanhos)
+        CLUST_CUT = np.array(CLUST[0])[np.nonzero(CLUST[2])]
+    reorganização da lista, por contagem
+        CLUST_LIST_CUT = Counter(CLUST_CUT)
+        CLUST_LIST = Counter(CLUST)
+    
+    N_S numero de clusters com tamanho S dentro do grid de tamanho L
+    N_S_CUT removendo da contagem os que tocam a borda
+    \sum_S N_S = número total de clusters presente
+    
+    SNS = S * N_S, S2NS = S^2 * N_S    
+    """
+    if tocut : NS_CUT = 0; SNS_CUT = 0; S2NS_CUT = 0
+    else : NS = 0; SNS = 0; S2NS = 0    
+
+    for i in range(samples) : 
+        """ Trata as 'estatisticas' do Get_Clusters obtendo NS,SNS e S2NS
+        para o caso completo e para o caso onde os clusters que tocam na borda
+        são ignorados (CUT)"""
+        CLUST = Get_Clusters(L,pf)
+ 
+        if tocut :
+            CLUST_CUT = np.array(CLUST[0])[np.nonzero(CLUST[2])] #remove da lista os clusters que tocam borda
+            NS_CUT += len(CLUST_CUT) #número total de clusters        
+            CLUST_LIST_CUT = Counter(CLUST_CUT)
+            if len(list(enumerate(CLUST_LIST_CUT)))>0 :
+                SNS_CUT_aux, S2NS_CUT_aux = sum( np.array([ S[1]*CLUST_LIST_CUT[S[1]], S[1]*S[1]*CLUST_LIST_CUT[S[1]] ]) for S in enumerate(CLUST_LIST_CUT))
+                SNS_CUT += SNS_CUT_aux; S2NS_CUT += S2NS_CUT_aux 
+        else :
+            NS += len(CLUST[0]) #número total de clusters
+            CLUST_LIST = Counter(CLUST[0])
+            if len(list(enumerate(CLUST_LIST)))>0 :
+                SNS_aux, S2NS_aux = sum( np.array([ S[1]*CLUST_LIST[S[1]], S[1]*S[1]*CLUST_LIST[S[1]] ]) for S in enumerate(CLUST_LIST))
+                SNS += SNS_aux; S2NS += S2NS_aux
+
+    if tocut :
+        NS_CUT /= samples; SNS_CUT /= samples;  S2NS_CUT /= samples 
+        return NS_CUT,SNS_CUT,S2NS_CUT
+    else :
+        NS /= samples; SNS /= samples; S2NS /= samples;
+        return NS,SNS,S2NS
+    return
+
+
+def Get_Clusters(G_L,G_p):
+    """ Dado um tamanho de rede e probabilidade de célula livre, retorna dados
+    dos clusters presentes: número de conexões de cada cluster, grid inicial,
+    informação se os clusters tocam as bordas do grid"""
+    ##inicialização
+#    G_L = 31
+#    G_p = .6
+    x = lattice(G_L,G_p)
+    Fx = x.FREE_GRID
+    ##conjunto de clusters
+    Clust = []
+    Clust_conn = []
+    Clust_edges = []
+    ##Primeiro Cluster
+    x.percolatefull()
+    Clust.append(x.GRID) # armazena cluster
+    Clust_conn.append(Clust[len(Clust_conn)].sum()) #numero de conexões do cluster
+    x.checkedge()
+    Clust_edges.append(not(x.edgeB))
+    FlagCluster = x.hasCluster() # confere se ainda existe algum cluster a ser encontrado
+    
+    while FlagCluster:
+        x.restart(Clust[len(Clust_conn)-1])    
+        x.percolatefull()
+        Clust.append(x.GRID) # armazena cluster
+        Clust_conn.append(Clust[len(Clust_conn)].sum()) #numero de conexões do cluster
+        x.checkedge()
+        Clust_edges.append(not(x.edgeB))
+        FlagCluster = x.hasCluster() # confere se ainda existe algum cluster a ser encontrado
+      
+#    ##Conferindo se obtivemos realmente todos os clusters
+#    All_Clust = Clust[0].copy()
+#    for i in range(1,len(Clust_conn)):
+#        All_Clust += Clust[i]
+#    0 in (Fx == All_Clust)
+
+    return Clust_conn,Fx,Clust_edges
+
+###############################################################################
+
 def just_do_it():
     
     L_range = ([51,101,151,201,251])
+#    L_range = ([301,401,501,601,701])
     T_values = []
     
     for L in L_range:
@@ -15,36 +124,6 @@ def just_do_it():
     print(L_range)
     print(T_values)
     return
-
-#runover_main(21,1000,10,'A',False,True)
-
-#def resume():
-#    prob_points=100
-#    samples=1000
-#    L_range = [21,61,101]
-#    
-#    pf_range = np.linspace(.4,.8,prob_points)
-#    perc = [np.array([average_main(L,pf,samples,'A') for pf in pf_range]) for
-#            L in L_range]
-#    
-#    fig = plt.figure()
-#    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
-#    for i in range(len(perc)):
-#        ax.plot(pf_range,perc[i],label=str(L_range[i]))
-#    ax.legend(loc='upper left',fontsize='small')
-#    return
-#resume()
-
-#def main_test():
-#    G_L = 31
-#    G_p = .6
-#    for i in range(10000):
-#        x = lattice(G_L,G_p)
-#        x.percolate()
-#    return
-#measure(main_test)
-
-
 
 ###############################################################################
 
@@ -78,9 +157,7 @@ class lattice:
     """   
     def __init__(self,L0,pf):
         if (L0%2) : self.L = L0
-        else :
-            self.L = L0+1
-            print("Size changed to "+str(L0+1))
+        else : self.L = L0+1; print("Size changed to "+str(L0+1))
         
         self.GRID = np.zeros((self.L+2,self.L+2),dtype=bool)    
         Lm=np.int((self.L+1)/2)        
@@ -91,14 +168,26 @@ class lattice:
         self.FREE_GRID[1:-1,1:-1] = (INIT_RAND < pf) #True se vazio
         self.FREE_GRID[Lm,Lm]=True
 
-        self.edgeU=False
-        self.edgeD=False
-        self.edgeL=False
-        self.edgeR=False
-        self.edge=False
-        self.conv=False
-        self.STEP=0
+        self.edgeU=False; self.edgeD=False; self.edgeL=False; self.edgeR=False
+        self.edge=False; self.conv=False; self.STEP=0
         return
+    def hasCluster(self):
+        return (1 in self.FREE_GRID ^ self.GRID)
+    def restart(self,CLUSTER):
+        """ Útil para obter vários clusters"""
+        if self.hasCluster():
+            self.FREE_GRID = self.FREE_GRID ^ CLUSTER
+    
+            # Melhorar isso... .nonzero() dá lista de TODOS! Quero somente o primeiro
+            coord = (np.array(self.FREE_GRID.nonzero()).T[0,0],
+                     np.array(self.FREE_GRID.nonzero()).T[0,1])
+            self.GRID = np.zeros((self.L+2,self.L+2),dtype=bool)    
+            self.GRID[coord]=True
+               
+            self.edgeU=False; self.edgeD=False; self.edgeL=False; self.edgeR=False
+            self.edge=False; self.conv=False; self.STEP=0
+        else : print("Não existem mais clusters!")
+        return        
     def toprint(self):
         return self.GRID[1:-1,1:-1]*1 + np.invert(self.FREE_GRID[1:-1,1:-1])*(-1)
     def nextstep(self):
@@ -134,6 +223,16 @@ class lattice:
             self.checkconvergence()
             if self.conv : break
             if self.edge : break
+            self.acept()
+            self.STEP +=1
+        return
+    def percolatefull(self):
+        """ Removido condição de parada ao chegar na borda """
+        MAX_STEPS = 1000
+        while (self.STEP < MAX_STEPS):
+            self.nextstep()
+            self.checkconvergence()
+            if self.conv : break
             self.acept()
             self.STEP +=1
         return
@@ -256,7 +355,7 @@ def runover_main(L,samples,prob_points,kind,FlagFit,FlagPlot):
         fig.savefig(str(method)+'Fit'+thestrings[0]+str(L)+'.png')
     
     return Tend
-
+   
 ### -------------- Function : necessário para o fit ---------------
 def sigmoid(x,a,b):
     return 1 / (1+ np.exp(-a*(x-b)))
