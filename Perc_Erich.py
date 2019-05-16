@@ -83,8 +83,11 @@ def Get_Clusters(G_L,G_p):
     x.percolatefull()
     Clust.append(x.GRID) # armazena cluster
     Clust_conn.append(Clust[len(Clust_conn)].sum()) #numero de conexões do cluster
-    x.checkedge()
-    Clust_edges.append(not(x.edgeB))
+#        #conferia se tocava a borda pelo menos uma vez
+#    x.checkedge()
+#    Clust_edges.append(not(x.edgeB))
+    #confere se cluster toca a si mesmo pelas bordas
+    Clust_edges.append(not(x.checkedgeperc())) 
     FlagCluster = x.hasCluster() # confere se ainda existe algum cluster a ser encontrado
     
     while FlagCluster:
@@ -92,8 +95,12 @@ def Get_Clusters(G_L,G_p):
         x.percolatefull()
         Clust.append(x.GRID) # armazena cluster
         Clust_conn.append(Clust[len(Clust_conn)].sum()) #numero de conexões do cluster
-        x.checkedge()
-        Clust_edges.append(not(x.edgeB))
+#        #conferia se tocava a borda pelo menos uma vez
+#        x.checkedge()
+#        Clust_edges.append(not(x.edgeB)) #fará filtro, só sobrevive quem não toca borda
+        #confere se cluster toca a si mesmo pelas bordas
+        Clust_edges.append(not(x.checkedgeperc())) #fará filtro, só sobrevive quem não se toca
+
         FlagCluster = x.hasCluster() # confere se ainda existe algum cluster a ser encontrado
       
 #    ##Conferindo se obtivemos realmente todos os clusters
@@ -101,7 +108,6 @@ def Get_Clusters(G_L,G_p):
 #    for i in range(1,len(Clust_conn)):
 #        All_Clust += Clust[i]
 #    0 in (Fx == All_Clust)
-
     return Clust_conn,Fx,Clust_edges
 
 ###############################################################################
@@ -200,6 +206,15 @@ class lattice:
     def acept(self):
         self.GRID = self.NEW_GRID
         return
+    def checkedgeperc(self):
+        """ GRID with size self.L+2
+            index 0 and L+1 are null borders
+            index 1 and L are true edges
+            VERIFY if cluster itself through borders.
+        """
+        Horizontal = (1 in self.GRID.T[1] & self.GRID.T[self.L])
+        Vertical = (1 in self.GRID[1] & self.GRID[self.L])
+        return Horizontal, Vertical    
     def checkedge(self):
         """ GRID with size self.L+2
             index 0 and L+1 are null borders
@@ -230,6 +245,26 @@ class lattice:
         """ Removido condição de parada ao chegar na borda """
         MAX_STEPS = 1000
         while (self.STEP < MAX_STEPS):
+            self.nextstep()
+            self.checkconvergence()
+            if self.conv : break
+            self.acept()
+            self.STEP +=1
+        return
+    def BC_periodic(self):
+        """ Adiciona condições de contorno periodicas"""
+        self.GRID[0] = self.GRID[self.L]
+        self.GRID[self.L+1] = self.GRID[1]
+        self.GRID.T[0] = self.GRID.T[self.L]
+        self.GRID.T[self.L+1] = self.GRID.T[1]        
+        return
+    def percolatefull_periodic(self):
+        """ Removido condição de parada ao chegar na borda.
+        Adiciona condição de contorno periodica
+        """
+        MAX_STEPS = 1000
+        while (self.STEP < MAX_STEPS):
+            self.BC_periodic()
             self.nextstep()
             self.checkconvergence()
             if self.conv : break
