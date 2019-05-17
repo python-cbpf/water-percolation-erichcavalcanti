@@ -9,6 +9,33 @@ def test(ord):
 #    print(Py)
     return
 
+def test2(L1,L2,L3,cut):
+    """ Só plota"""
+    Px1,Py1 = Clust_see(L1,10,100,cut)
+    Px2,Py2 = Clust_see(L2,10,100,cut)
+    Px3,Py3 = Clust_see(L3,10,100,cut)
+
+    ax1 = plt.subplot(311)
+    plt.plot(Px1,Py1[0],'ro-')
+    plt.plot(Px2,Py2[0],'go-')
+    plt.plot(Px3,Py3[0],'bo-')
+    plt.setp(ax1.get_xticklabels(), visible=False)
+    plt.setp(ax1.get_yticklabels(), visible=False)
+    ax2 = plt.subplot(312, sharex=ax1)
+    plt.plot(Px1,Py1[1],'ro-')
+    plt.plot(Px2,Py2[1],'go-')
+    plt.plot(Px3,Py3[1],'bo-')
+    plt.setp(ax2.get_xticklabels(), visible=False)
+    plt.setp(ax2.get_yticklabels(), visible=False)
+    ax3 = plt.subplot(313, sharex=ax1)
+    plt.plot(Px1,Py1[2],'ro-')
+    plt.plot(Px2,Py2[2],'go-')
+    plt.plot(Px3,Py3[2],'bo-')
+    plt.setp(ax3.get_yticklabels(), visible=False)
+    plt.show()
+    
+    return
+
 def Clust_see(L,prob_points,samples,tocut):
     """ Faz Clust_Avg para um conjunto de probabilidades pf. 
     Organiza dados para facilitar plot"""
@@ -64,7 +91,6 @@ def Clust_Avg(L,pf,samples,tocut) :
         NS /= samples; SNS /= samples; S2NS /= samples;
         return NS,SNS,S2NS
     return
-
 
 def Get_Clusters(G_L,G_p):
     """ Dado um tamanho de rede e probabilidade de célula livre, retorna dados
@@ -140,6 +166,7 @@ from pylab import matplotlib as mpl
 from scipy.optimize import curve_fit
 mpl.rcParams.update({'font.size': 18, 'font.family': 'serif'})
 
+
 ### -------------- Class : lattice ---------------
 class lattice:
     """
@@ -214,7 +241,7 @@ class lattice:
         """
         Horizontal = (1 in self.GRID.T[1] & self.GRID.T[self.L])
         Vertical = (1 in self.GRID[1] & self.GRID[self.L])
-        return Horizontal, Vertical    
+        return Horizontal | Vertical
     def checkedge(self):
         """ GRID with size self.L+2
             index 0 and L+1 are null borders
@@ -242,7 +269,9 @@ class lattice:
             self.STEP +=1
         return
     def percolatefull(self):
-        """ Removido condição de parada ao chegar na borda """
+        """ Removido condição de parada ao chegar na borda 
+        mas NÃO apresenta condição de contorno periodica
+        """
         MAX_STEPS = 1000
         while (self.STEP < MAX_STEPS):
             self.nextstep()
