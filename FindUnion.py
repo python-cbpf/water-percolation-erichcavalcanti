@@ -21,33 +21,33 @@ def time_test():
     return L_range,T_range
 
 ########################################################################
-def test(L,many):
+def test(L,many,CUT):
     """ So plota"""
-    Ns,sNs,s2Ns = many_runs(L,many).T
+    Ns,sNs,s2Ns = many_runs(L,many,CUT).T
     n = list(range(1,L*L))
 
     ax1 = plt.subplot(311)
-    plt.plot(n,Ns,'ro-')
+    plt.plot(n,Ns,'r')
     plt.setp(ax1.get_xticklabels(), visible=False)
     plt.setp(ax1.get_yticklabels(), visible=False)
     ax2 = plt.subplot(312, sharex=ax1)
-    plt.plot(n,sNs,'ro-')
+    plt.plot(n,sNs,'r')
     plt.setp(ax2.get_xticklabels(), visible=False)
     plt.setp(ax2.get_yticklabels(), visible=False)
     ax3 = plt.subplot(313, sharex=ax1)
-    plt.plot(n,s2Ns,'ro-')
+    plt.plot(n,s2Ns,'r')
     plt.setp(ax3.get_yticklabels(), visible=False)
     plt.show()
     return
 
-def many_runs(L,how_many):
+def many_runs(L,how_many,CUT):
     """Tira a media para um certo numero de samples"""
     Stats = np.zeros((L*L-1,3))
     for runs in range(how_many):
-        Stats += one_run(L)
+        Stats += one_run(L,CUT)
     return Stats/how_many
 
-def one_run(L):
+def one_run(L,CUT):
     """Testa uma rede de tamanho L, todas as ocupacoes"""
     N = L*L
     X = lattice(L)
@@ -55,7 +55,7 @@ def one_run(L):
     
     for n in range(N-1): #modifying the number of occupied cells
         X.addcell()
-        StatsNoccupied[n] = np.array(X.stats())
+        StatsNoccupied[n] = np.array(X.stats_cut()[CUT])
     
     return StatsNoccupied
 
@@ -177,3 +177,5 @@ def plot(toprint):
     plt.imshow(toprint,vmin=-1,vmax=1,cmap='coolwarm')
     plt.axis('off')
     return
+
+########################################################################
