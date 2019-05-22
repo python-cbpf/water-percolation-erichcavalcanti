@@ -1,6 +1,6 @@
 def try_time():
-    L = 100
-    for i in range(2):
+    L = 10
+    for i in range(10000):
         N = L*L
         X = lattice(L)
         StatsNoccupied = np.zeros((N-1,3))        
@@ -19,9 +19,10 @@ def time_test():
         one_run(L_range[i])
         T_range[i] = time.time()-T_range[i]
     return L_range,T_range
+
 ########################################################################
 def test(L,many):
-    """ Só plota"""
+    """ So plota"""
     Ns,sNs,s2Ns = many_runs(L,many).T
     n = list(range(1,L*L))
 
@@ -40,14 +41,14 @@ def test(L,many):
     return
 
 def many_runs(L,how_many):
-    """Tira a média para um certo numero de samples"""
+    """Tira a media para um certo numero de samples"""
     Stats = np.zeros((L*L-1,3))
     for runs in range(how_many):
         Stats += one_run(L)
     return Stats/how_many
 
 def one_run(L):
-    """Testa uma rede de tamanho L, todas as ocupações"""
+    """Testa uma rede de tamanho L, todas as ocupacoes"""
     N = L*L
     X = lattice(L)
     StatsNoccupied = np.zeros((N-1,3))
@@ -104,9 +105,10 @@ class lattice:
         return
     def belongsto(self,INDEX):
         """ verifica a que cluster pertence um elemento. """
-        for LABEL in self.CLUSTERS:
-            if INDEX in self.CLUSTERS[LABEL]:
-                return [LABEL]
+        if self.GRID[INDEX] : #confere se celula esta ativa
+            for LABEL in self.CLUSTERS:
+                if INDEX in self.CLUSTERS[LABEL]:
+                    return [LABEL]
         return []
     def neighbor_D(self,INDEX):
         """ Boundary empty"""        
@@ -135,31 +137,43 @@ class lattice:
         """ Check if some cluster touch itself through edges
 
             - Feio do modo como esta
-            - InfClust tem informacao repetida. Adiciona o label do "cluster" toda para CADA edge que se toca.
         """
-        #Modo não inteligente de construir pares e conferir se existe cluster infinito
-        pairs = [[(0,i),(4,i)] for i in range(self.L)] + [[(i,0),(i,4)] for i in range(self.L)]
+        #Modo nao inteligente de construir pares e conferir se existe cluster infinito
+        pairs = [[(0,i),(self.L-1,i)] for i in range(self.L)] + [[(i,0),(i,self.L-1)] for i in range(self.L)]
         
         InfClust = []
         if len(pairs)!=0:
-            for eachpair in pairs:
-                for eachclust in self.CLUSTERS:
-                    flag = (eachpair[0] in self.CLUSTERS[eachclust]) & (eachpair[1] in self.CLUSTERS[eachclust])
-                    if flag : InfClust += [eachclust]
+            for eachclust in self.CLUSTERS:
+                if (len(self.CLUSTERS[eachclust])>(self.L-1)): #essencial para nao olhar clusters pequenos
+                    for eachpair in pairs:
+                        flag = (eachpair[0] in self.CLUSTERS[eachclust]) & (eachpair[1] in self.CLUSTERS[eachclust])
+                        if flag : InfClust += [eachclust]; break
         return InfClust
-    def stats(self):
-        # !! DO NOT HAVE THE CUT TO REMOVE INFINITE CLUSTERS !!
-        ns = len( self.CLUSTERS ) # number of clusters
-        sns, s2ns = sum( 
-                np.array([len(self.CLUSTERS[CLST]), 
-                          len(self.CLUSTERS[CLST])*len(self.CLUSTERS[CLST])]) for CLST in self.CLUSTERS)
-        return ns,sns,s2ns
-    
+    def stats_cut(self):
+        newdict = {}
+        
+        for label in self.CLUSTERS:
+            newdict[label] = len(self.CLUSTERS[label])
+        newdict_cut = newdict.copy()
+        for label in self.check_InfClust():
+            newdict_cut.pop(label)
+            
+        LISTCLST, LSITCLST_CUT = np.array(list(newdict.values())), np.array(list(newdict_cut.values()))
+        STATS = [len(LISTCLST), LISTCLST.sum(), (LISTCLST*LISTCLST).sum()]
+        STATS_CUT = [len(LSITCLST_CUT), LSITCLST_CUT.sum(), (LSITCLST_CUT*LSITCLST_CUT).sum()]
+        return STATS,STATS_CUT
+    def stats(self): ##Parece ser mais veloz que o stats
+        newdict = {}
+        
+        for label in self.CLUSTERS:
+            newdict[label] = len(self.CLUSTERS[label])
+            
+        LISTCLST = np.array(list(newdict.values()))
+        STATS = [len(LISTCLST), LISTCLST.sum(), (LISTCLST*LISTCLST).sum()]
+        return STATS
 from matplotlib import pyplot as plt
 def plot(toprint):
     plt.figure()
     plt.imshow(toprint,vmin=-1,vmax=1,cmap='coolwarm')
     plt.axis('off')
     return
-
-try_time()
