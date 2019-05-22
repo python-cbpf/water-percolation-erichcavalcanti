@@ -1,3 +1,24 @@
+def try_time():
+    L = 100
+    for i in range(2):
+        N = L*L
+        X = lattice(L)
+        StatsNoccupied = np.zeros((N-1,3))        
+        for n in range(N-1): #modifying the number of occupied cells
+            X.addcell()
+            StatsNoccupied[n] = np.array(X.stats())
+    return
+
+########################################################################
+import time
+def time_test():
+    L_range = np.array([50,100,150,200,250])
+    T_range = np.zeros_like(L_range,dtype=float)
+    for i in range(len(L_range)):
+        T_range[i] = time.time()
+        one_run(L_range[i])
+        T_range[i] = time.time()-T_range[i]
+    return L_range,T_range
 ########################################################################
 def test(L,many):
     """ Só plota"""
@@ -114,7 +135,7 @@ class lattice:
         """ Check if some cluster touch itself through edges
 
             - Feio do modo como esta
-            - InfClust tem informação repetida. Adiciona o label do "cluster" toda para CADA edge que se toca.
+            - InfClust tem informacao repetida. Adiciona o label do "cluster" toda para CADA edge que se toca.
         """
         #Modo não inteligente de construir pares e conferir se existe cluster infinito
         pairs = [[(0,i),(4,i)] for i in range(self.L)] + [[(i,0),(i,4)] for i in range(self.L)]
@@ -140,3 +161,5 @@ def plot(toprint):
     plt.imshow(toprint,vmin=-1,vmax=1,cmap='coolwarm')
     plt.axis('off')
     return
+
+try_time()
