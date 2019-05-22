@@ -1,5 +1,3 @@
-#test(5,3)
-
 ########################################################################
 def test(L,many):
     """ Só plota"""
@@ -67,12 +65,12 @@ class lattice:
         #confere a que cluster pertencem os vizinhos
         #Necessario tomar cuidado para não contar o mesmo cluster varias vezes
         WHICH_CLUSTER = []
-        ALL_NGH = self.neighbor(INDEX)
+        ALL_NGH = self.neighbor_D(INDEX)
         for NGH in ALL_NGH:
             AUX = self.belongsto(NGH) 
             if len(AUX)==1:
                 if (AUX[0] not in WHICH_CLUSTER): WHICH_CLUSTER += AUX
-                                      
+        
         if(len(WHICH_CLUSTER)==0): #nova celula não tem clusters vizinhos
             self.CLUSTERS[self.NEXT] = [INDEX] #list of tuples
             self.NEXT+=1 #new cluster created, therefore INDEX is incremented
@@ -89,11 +87,19 @@ class lattice:
             if INDEX in self.CLUSTERS[LABEL]:
                 return [LABEL]
         return []
-    def neighbor(self,INDEX):
-        """ Já com condição de contorno periodica. Lista de vizinhos"""
+    def neighbor_D(self,INDEX):
+        """ Boundary empty"""        
+        NGH = []        
+        if INDEX[0]!=0 : NGH += [(INDEX[0]-1,INDEX[1])] 
+        if INDEX[0]!=self.L-1 : NGH += [(INDEX[0]+1,INDEX[1])]             
+        if INDEX[1]!=0 : NGH += [(INDEX[0],INDEX[1]-1)] 
+        if INDEX[1]!=self.L-1 : NGH += [(INDEX[0],INDEX[1]+1)] 
+        return NGH
+    def neighbor_P(self,INDEX):
+        """ Periodic boundary condition"""
         if INDEX[0]==0 : NGH = [(self.L-1,INDEX[1])]
         else : NGH = [(INDEX[0]-1,INDEX[1])] 
-
+    
         if INDEX[0]==self.L-1 : NGH += [(0,INDEX[1])]
         else : NGH += [(INDEX[0]+1,INDEX[1])] 
             
@@ -104,6 +110,22 @@ class lattice:
         else : NGH += [(INDEX[0],INDEX[1]+1)] 
 
         return NGH
+    def check_InfClust(self):
+        """ Check if some cluster touch itself through edges
+
+            - Feio do modo como esta
+            - InfClust tem informação repetida. Adiciona o label do "cluster" toda para CADA edge que se toca.
+        """
+        #Modo não inteligente de construir pares e conferir se existe cluster infinito
+        pairs = [[(0,i),(4,i)] for i in range(self.L)] + [[(i,0),(i,4)] for i in range(self.L)]
+        
+        InfClust = []
+        if len(pairs)!=0:
+            for eachpair in pairs:
+                for eachclust in self.CLUSTERS:
+                    flag = (eachpair[0] in self.CLUSTERS[eachclust]) & (eachpair[1] in self.CLUSTERS[eachclust])
+                    if flag : InfClust += [eachclust]
+        return InfClust
     def stats(self):
         # !! DO NOT HAVE THE CUT TO REMOVE INFINITE CLUSTERS !!
         ns = len( self.CLUSTERS ) # number of clusters
