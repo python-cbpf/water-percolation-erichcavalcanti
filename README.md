@@ -1,3 +1,17 @@
+# All
+
+There are 3 codes at the moment
+
+"Perc_Erich" 
+    The first one (and is better "documented"). Works with the whole matrix, get the clusters from it.
+
+"FindUnion"
+    Add one cell at a time. Obtain clusters.
+    
+"RootPointer"
+    Same as above, but with the root for each cluster
+
+
 # water-percolation-erichcavalcanti
 water-percolation-erichcavalcanti created by GitHub Classroom
 
